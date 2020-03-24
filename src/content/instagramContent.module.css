@@ -1,0 +1,12 @@
+.dialogHeader {
+    font-size: 2em;
+    margin: 1em 0;
+}
+
+.dialogTextarea {
+    display: block; 
+    margin: 0.5rem; 
+    width: 500px; 
+    height: 500px; 
+    border-radius:0.25rem;
+}

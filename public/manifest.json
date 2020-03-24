@@ -1,0 +1,33 @@
+{
+  "name": "React Later",
+  "version": "1.0",
+  "permissions": ["activeTab", "commands", "declarativeContent", "storage", "webRequest", "<all_urls>"],
+  "manifest_version": 2,
+  "icons": {
+    "16": "logo192.png",
+    "32": "logo192.png",
+    "48": "logo192.png",
+    "128": "logo192.png"
+  },
+  "browser_action": {
+    "default_popup": "popup.html"
+  },
+  "background": {
+    "page": "background.html",
+    "persistent": true
+  },
+  "options_page": "options.html",
+  "content_scripts" : [
+    {
+      "matches": ["https://app.later.com/2QQB6/collect/import?url=*"],
+      "js": ["/static/js/0.chunk.js", "/static/js/laterContent.js"]
+    },
+    {
+      "matches": ["https://www.instagram.com/p/*"],
+      "css": ["/static/css/0.chunk.css", "/static/css/instagramContent.css"],
+      "js": ["/static/js/0.chunk.js", "/static/js/instagramContent.js"]
+    }
+ ],
+ "web_accessible_resources": ["options.html"],
+ "content_security_policy": "script-src 'self' 'sha256-FRoFlGx2+Fhv0tPS9pYdsPweLbLLjRfa4Ap2BYiXk2E='; object-src 'self'"
+}
