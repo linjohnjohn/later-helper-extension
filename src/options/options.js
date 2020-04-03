@@ -74,9 +74,23 @@ class Options extends React.Component {
             const id = data.user.id
             const userDetailsResponse = await fetch(`https://app.later.com/api/v2/users/${id}/accounts?userId=${id}`)
             const userDetailData = await userDetailsResponse.json();
-            const mainGroupDetails = userDetailData.groups.filter(group => group.name === 'Main Group')[0]
+            
+            const mainGroupDetails = userDetailData.groups[0]
             const mainGroupSlug = mainGroupDetails.slug;
-            chrome.storage.local.set({ laterSlug: mainGroupSlug }, () => {
+
+            let labels = mainGroupDetails.label_ids;
+            const labelQuery = labels.map(label => `${encodeURIComponent('ids[]')}=${String(label)}`).join('&');
+            const labelNamesResponse = await fetch(`https://app.later.com/api/v2/labels?${labelQuery}`);
+            const labelNameData = await labelNamesResponse.json();
+            labels = labelNameData.labels;
+
+            const labelMap = labels.reduce((map, labelObj) => {
+                map[labelObj.title] = labelObj.id;
+                return map;
+            }, {});
+            
+
+            chrome.storage.local.set({ laterSlug: mainGroupSlug, laterLabelMap: labelMap }, () => {
                 this.setLaterSlug(mainGroupSlug);
             });
         } else if (response.status === 401) {

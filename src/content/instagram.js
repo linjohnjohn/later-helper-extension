@@ -5,7 +5,54 @@ import ReactDOM from 'react-dom';
 import styles from './instagram.module.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
-const saveButton = document.querySelector('section.ltpMr>.wpO6b');
+console.log('ig content script loaded');
+
+const waitThenDo = (fn, delay) => {
+    return new Promise((resolve) => {
+        setTimeout(() => {
+            try {
+                resolve(fn())
+            } catch (err) {
+                console.log(err);
+            }
+        }, delay)
+    })
+}
+
+let oldHref = document.location.href;
+let dialogContainer = document.createElement('div');
+let saveButton;
+
+function prepareSaveModal() {
+    if (document.location.href.includes('instagram.com/p/')) {
+        saveButton = document.querySelector('section.ltpMr>.wpO6b');
+        dialogContainer.remove();
+        document.body.append(dialogContainer);
+        ReactDOM.render(<SaveModal key={Math.random()}/>, dialogContainer);
+    }
+};
+
+waitThenDo(prepareSaveModal, 500);
+
+const body = document.querySelector('body'), observer = new MutationObserver((mutations) => {
+    mutations.forEach(async (mutation) => {
+        if (oldHref !== document.location.href) {
+            oldHref = document.location.href;
+            if (document.location.href.includes('instagram.com/p/')) {
+                console.log('change')
+                await waitThenDo(prepareSaveModal, 500);
+            }
+        }
+    })
+});
+
+const config = {
+    childList: true,
+    subtree: true
+}
+
+observer.observe(body, config);
+
 
 class SaveModal extends React.Component {
     dialog = React.createRef();
@@ -13,7 +60,8 @@ class SaveModal extends React.Component {
         laterSlug: '',
         hashtagGroups: {},
         customizedCaption: '',
-        selectedHashtagGroup: ''
+        selectedHashtagGroup: '',
+        customCredit: ''
     }
 
     setLaterSlug = (laterSlug) => {
@@ -30,6 +78,10 @@ class SaveModal extends React.Component {
 
     setSelectedHashtagGroup = (selectedHashtagGroup) => {
         this.setState({ selectedHashtagGroup });
+    }
+
+    setCustomCredit = (customCredit) => {
+        this.setState({ customCredit });
     }
 
     componentDidMount() {
@@ -55,47 +107,27 @@ class SaveModal extends React.Component {
             event.stopPropagation();
             event.preventDefault();
             this.dialog.current.showModal();
-        })
+        });
     }
 
     onSaveToLater = () => {
         chrome.storage.local.get(['captionTemplateMap'], (result) => {
-            const { customizedCaption } = this.state;
+            const { customizedCaption, customCredit } = this.state;
             const url = window.location.href;
+            const captions = customizedCaption.split('||').map(caption => caption.trim());
 
-            let [ rawCaptions, credit] = customizedCaption.split('credit>>');
-            const captions = rawCaptions.split('||').map(caption => caption.trim());
-            credit = credit.replace('@', '');
-
-            // let hashtags;
-
-            // if (selectedHashtagGroup === 'random') {
-            //     const groupNames = Object.keys(hashtagGroups);
-            //     if (groupNames.length === 0) {
-            //         hashtags = '';
-            //     }
-            //     const randomGroupName = groupNames[Math.floor(Math.random() * groupNames.length)];
-            //     hashtags = hashtagGroups[randomGroupName];
-            // } else {
-            //     hashtags = hashtagGroups[selectedHashtagGroup];
-            // }
-
-            // const captionObjects = Object.keys(captionTemplateMap).map(templateName => {
-            //     const captionTemplate = captionTemplateMap[templateName];
-            //     return {
-            //         labels: [],
-            //         caption: captionTemplate.replace('{{customized}}', customized).replace('{{hashtags}}', hashtags)
-            //     };
-            // });
-            chrome.runtime.sendMessage({ type: 'savePost', url, captions, credit });
-            chrome.runtime.sendMessage({ type: 'close' });
+            chrome.runtime.sendMessage({ type: 'savePost', url, captions, credit: customCredit.replace('@', '') });
+            this.dialog.current.close();
         })
 
     }
 
     render() {
-        const { laterSlug, customizedCaption } = this.state;
-        return (<dialog ref={this.dialog}>
+        const { laterSlug, customizedCaption, customCredit } = this.state;
+        return (
+        <dialog 
+            ref={this.dialog}
+        >
             {
                 laterSlug === '' ? 
                 <h1>Please visit the extension <a href={chrome.extension.getURL("options.html")}>option</a> page to initialize Later</h1> :
@@ -105,16 +137,25 @@ class SaveModal extends React.Component {
                         <textarea class={styles.dialogTextarea}
                             value={customizedCaption}
                             onChange={e => this.setCustomizedCaption(e.target.value)}
+                            onKeyUp={e => e.nativeEvent.stopPropagation()}
+                        />
+                    </div>
+
+                    <div className="form-group">
+                        <label>Override Default Credit (Default credit goes to poster)</label>
+                        <input 
+                            className="form-control" 
+                            placeholder="Leave empty unless you want to override default credit" 
+                            value={customCredit} 
+                            onChange={e => this.setCustomCredit(e.target.value)}
                         />
                     </div>
 
                     <button class='btn btn-primary' onClick={this.onSaveToLater}>Save To Later</button>
+                    <button class='btn btn-danger' onClick={() => this.dialog.current.close()}>Cancel</button>
                 </div>
             }
         </dialog>)
     }
 }
 
-const dialogContainer = document.createElement('div');
-document.body.append(dialogContainer);
-ReactDOM.render(<SaveModal />, dialogContainer);

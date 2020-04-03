@@ -1,7 +1,7 @@
 {
   "name": "React Later",
   "version": "1.0",
-  "permissions": ["activeTab", "commands", "declarativeContent", "storage", "webRequest", "<all_urls>"],
+  "permissions": ["activeTab", "commands", "declarativeContent", "storage", "webRequest", "webRequestBlocking", "<all_urls>"],
   "manifest_version": 2,
   "icons": {
     "16": "logo192.png",
@@ -19,13 +19,17 @@
   "options_page": "options.html",
   "content_scripts" : [
     {
-      "matches": ["https://app.later.com/2QQB6/collect/import?url=*"],
+      "matches": ["https://app.later.com/*/schedule/calendar*"],
+      "js": ["/static/js/laterScheduleCalendar.js"]
+    },
+    {
+      "matches": ["https://app.later.com/*/collect/import?url=*"],
       "js": ["/static/js/0.chunk.js", "/static/js/laterContent.js"]
     },
     {
-      "matches": ["https://www.instagram.com/p/*"],
-      "css": ["/static/css/0.chunk.css", "/static/css/instagramContent.css"],
-      "js": ["/static/js/0.chunk.js", "/static/js/instagramContent.js"]
+      "matches": ["https://www.instagram.com/*"],
+      "css": ["/static/css/0.chunk.css", "/static/css/instagram.css"],
+      "js": ["/static/js/0.chunk.js", "/static/js/instagram.js"]
     }
  ],
  "web_accessible_resources": ["options.html"],

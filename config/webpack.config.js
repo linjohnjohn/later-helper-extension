@@ -143,8 +143,10 @@ module.exports = function(webpackEnv) {
     // },
     entry: {
       popup: "./src/popup/popup.js",
+      instagram: "./src/content/instagram.js",
       instagramContent: "./src/content/instagramContent.js",
       laterContent: "./src/content/laterContent.js",
+      laterScheduleCalendar: "./src/content/laterScheduleCalendar.js",
       background: "./src/background/background.js",
       options: "./src/options/options.js"
     },

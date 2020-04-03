@@ -1,5 +1,6 @@
 /* global chrome */
 import './transferMedia';
+import './laterScheduleInterceptor';
 
 console.log('background script attached')
 

@@ -6,129 +6,72 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 
 class Popup extends React.Component {
   state = {
-    linksTextValue: '',
-    numberOfTabsToOpen: 10,
-    isActive: false,
-    isActivelyOpening: false,
-  }
-
-  setLinksTextValue = (linksTextValue) => {
-    this.setState({ linksTextValue })
-  }
-
-  setNumberOfTabsToOpen = (numberOfTabsToOpen) => {
-    this.setState({ numberOfTabsToOpen })
-  }
-
-  setIsActive = isActive => {
-    this.setState({ isActive });
-  }
-
-  setIsActivelyOpening = (isActivelyOpening) => {
-    this.setState({ isActivelyOpening });
+    laterSlug: '',
+    laterLabelMap: {},
+    captionTemplateMap: {},
+    hashtagGroups: {},
+    selectedTemplate: '',
+    selectedLabel: '',
+    selectedHashtagGroup: ''
   }
 
   componentDidMount() {
-    chrome.storage.local.get(['urls', 'isActivelyOpening', 'isActive'], (result) => {
-      const urls = result.urls;
-      if (urls && urls.length !== 0) {
-        const linksTextValue = urls.reverse().join('\n');
-        this.setLinksTextValue(linksTextValue);
-        this.setIsActive(result.isActive);
-        this.setIsActivelyOpening(result.isActivelyOpening);
-      }
-    })
-  }
+    // get default caption
 
-  handleSubmitLinks = () => {
-    const { linksTextValue, numberOfTabsToOpen } = this.state;
-    const urlArray = linksTextValue.split('\n').reverse();
-    const numTabs = numberOfTabsToOpen;
-    for (let i = 0; i < Math.min(numTabs, urlArray.length); i++) {
-      const nextLink = urlArray.pop();
-      chrome.tabs.create({ url: nextLink, active: false });
-    }
-    chrome.storage.local.set({ urls: urlArray, isActivelyOpening: true, isActive: true }, () => {
-      this.setLinksTextValue(urlArray.reverse().join('\n'));
-      this.setIsActive(true);
-      this.setIsActivelyOpening(true);
+    chrome.storage.local.get(['hashtagGroups', 'laterSlug', 'laterLabelMap', 'captionTemplateMap', 'selectedTemplate', 'selectedLabel'], result => {
+      this.setState({
+        laterSlug: result.laterSlug || '',
+        laterLabelMap: result.laterLabelMap || {},
+        captionTemplateMap: result.captionTemplateMap || {},
+        hashtagGroups: result.hashtagGroups || {},
+        selectedTemplate: result.selectedTemplate || '',
+        selectedLabel: result.selectedLabel || '',
+      });
     });
   }
 
-  handlePause = () => {
-    chrome.storage.local.set({ isActivelyOpening: false }, () => {
-      this.setIsActivelyOpening(false);
+  handleSelectedTemplateChange = (e) => {
+    const selectedTemplate = e.target.value;
+    chrome.storage.local.set({ selectedTemplate }, () => {
+      this.setState({ selectedTemplate });
     });
   }
 
-  handlePlay = () => {
-    chrome.storage.local.set({ isActivelyOpening: true }, () => {
-      this.setIsActivelyOpening(true);
+  handleSelectedLabelChange = e => {
+    const selectedLabel = e.target.value;
+    chrome.storage.local.set({ selectedLabel }, () => {
+      this.setState({ selectedLabel });
     });
   }
-
-  handleStop = () => {
-    chrome.storage.local.set({ isActive: false, isActivelyOpening: false }, () => {
-      this.setIsActive(false);
-      this.setIsActivelyOpening(false);
-    });
-  }
-
   render() {
-    const { linksTextValue, numberOfTabsToOpen, isActivelyOpening, isActive } = this.state;
-    let playPause = null;
-    if (isActive) {
-      playPause = isActivelyOpening ?
-        <button
-          class="btn btn-primary m-1"
-          onClick={this.handlePause}
+    const { captionTemplateMap, laterLabelMap, selectedTemplate, selectedLabel } = this.state;
+    return (<div style={{ width: '500px' }}>
+      <div className="form-group">
+        <label>Select Active Template</label>
+        <select
+          className="custom-select"
+          onChange={this.handleSelectedTemplateChange}
+          value={selectedTemplate}
         >
-          Pause
-        </button> :
-        <button
-          class="btn btn-success m-1"
-          onClick={this.handlePlay}
-        >
-          Play
-        </button>
-    }
-    return (
-      <div class="m-2">
-        <label>All Links</label>
-        <textarea
-          class="form-group form-control"
-          style={{ width: "500px" }}
-          disabled={isActive}
-          cols="30" rows="10"
-          value={linksTextValue}
-          onChange={e => this.setLinksTextValue(e.target.value)}
-        />
-        <label>Initial Number of Tabs</label>
-        <input
-          class="form-group form-control"
-          type="number"
-          disabled={isActive}
-          placeholder="Number of Tabs To Open"
-          value={numberOfTabsToOpen}
-          onChange={e => this.setNumberOfTabsToOpen(e.target.value)}
-        />
-        {isActive ? 
-          <button
-          class="btn btn-danger m-1"
-          onClick={this.handleStop}
-          >
-          Stop
-          </button> :
-          <button
-            class="btn btn-primary m-1"
-            onClick={this.handleSubmitLinks}
-          >
-            Gradually Open
-          </button>
-        }
-        {playPause}
+          {Object.keys(captionTemplateMap).map(templateName => {
+            return <option value={templateName}>{templateName}</option>
+          })}
+        </select>
       </div>
-    );
+
+      <div className="form-group">
+        <label>Select a label to apply to saved media</label>
+        <select
+          className="custom-select"
+          onChange={this.handleSelectedLabelChange}
+          value={selectedLabel}
+        >
+          {Object.keys(laterLabelMap).map(labelName => {
+            return <option value={labelName}>{labelName}</option>
+          })}
+        </select>
+      </div>
+    </div>)
   }
 }
 
