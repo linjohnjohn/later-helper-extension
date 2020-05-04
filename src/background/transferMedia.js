@@ -19,12 +19,12 @@ console.log('transferMedia script attached');
 // open later importing tab
 chrome.runtime.onMessage.addListener(function(msg, sender, sendResponse) {
     if (msg.type === 'savePost') {
-        const { url, captions, credit } = msg;
+        const { url, captions, credit, autoSchedule, profileId, profileIgName } = msg;
         const encodedLink = encodeURIComponent(url);
         chrome.storage.local.get('laterSlug', res => {
-            const laterLink = `https://app.later.com/${res.laterSlug}/collect/import?url=${encodedLink}`;
+            let laterLink = `https://app.later.com/${res.laterSlug}/collect/import?url=${encodedLink}`;
             chrome.tabs.create({ url: laterLink, active: false }, function(tab) {
-                tabsToDetails[tab.id] = { captions, credit };
+                tabsToDetails[tab.id] = { captions, credit, autoSchedule, profileId, profileIgName };
             });
         });
     }

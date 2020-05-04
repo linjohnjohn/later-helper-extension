@@ -4,22 +4,6 @@ import './laterScheduleInterceptor';
 
 console.log('background script attached')
 
-// Init Later
-// (async function initLater() {
-//     const response = await fetch("https://app.later.com/api/v2/users/me");
-//     if (response.status === 200) {
-//         const data = await response.json();
-//         const id = data.user.id
-//         const userDetailsResponse = await fetch(`https://app.later.com/api/v2/users/${id}/accounts?userId=${id}`)
-//         const userDetailData = await userDetailsResponse.json();
-//         const mainGroupDetails = userDetailData.groups.filter(group => group.name === 'Main Group')[0]
-//         const mainGroupSlug = mainGroupDetails.slug;
-//         // const { slug, id: groupId, label_ids } = mainGroupDetails;
-//         // chrome.storage.local.set({ laterId: id, laterSlug: slug, laterGroupId: groupId })
-//     } else if (response.status === 401) {
-
-//     }
-// })();
 
 // General Commands 
 chrome.runtime.onMessage.addListener(function (msg, sender, sendResponse) {

@@ -39,7 +39,8 @@ waitThenDo(() => {
 }, 3000);
 
 const autoFill = async () => {
-    chrome.storage.local.get(['captionTemplateMap', 'selectedTemplate', 'hashtagGroups'], async ({ captionTemplateMap, selectedTemplate, hashtagGroups }) => {
+    chrome.storage.local.get(['captionTemplateMap', 'selectedTemplate'], async ({ captionTemplateMap, selectedTemplate }) => {
+        const [ template, hashtagList ] = captionTemplateMap[selectedTemplate];
         try {
             await waitThenDo(() => {
                 const captionTextarea = document.querySelector('textarea.cPT--post__textarea');
@@ -50,7 +51,6 @@ const autoFill = async () => {
 
                 credit = `@${credit.replace('@', '')}`;
                 const caption = captions[Math.floor(Math.random() * captions.length)];
-                const template = captionTemplateMap[selectedTemplate];
                 const finalCaption = template.replace('{{customized}}', caption).replace('{{hashtags}}', '').replace('@{{credit}}', credit).replace('{{credit}}', credit);
 
                 captionTextarea.value = finalCaption;
@@ -63,12 +63,11 @@ const autoFill = async () => {
 
             await waitThenDo(() => {
                 let hashtags;
-                const groupNames = Object.keys(hashtagGroups);
-                if (groupNames.length === 0) {
+
+                if (!hashtagList) {
                     hashtags = '';
                 } else {
-                    const randomGroupName = groupNames[Math.floor(Math.random() * groupNames.length)];
-                    hashtags = hashtagGroups[randomGroupName];
+                    hashtags = hashtagList.sort(() => Math.random() - 0.5).slice(0, 27).join(' ');
                 }
 
                 const firstCommentTextarea = document.querySelector(`textarea[name='firstComment']`);
