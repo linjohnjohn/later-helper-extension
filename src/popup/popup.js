@@ -2,49 +2,45 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import CaptionTemplateAPI from '../model/CaptionTemplateAPI';
+import LaterSettingsAPI from '../model/LaterSettingsAPI';
 
 
 class Popup extends React.Component {
   state = {
-    laterSlug: '',
-    laterLabelMap: {},
-    captionTemplateMap: {},
-    hashtagGroups: {},
-    selectedTemplate: '',
-    selectedLabel: '',
-    selectedHashtagGroup: ''
+    captionTemplates: [],
+    laterSettings: [],
+    selectedTemplate: null,
+    selectedLabel: null,
   }
 
-  componentDidMount() {
+  async componentDidMount() {
     // get default caption
-
-    chrome.storage.local.get(['hashtagGroups', 'laterSlug', 'laterLabelMap', 'captionTemplateMap', 'selectedTemplate', 'selectedLabel'], result => {
-      this.setState({
-        laterSlug: result.laterSlug || '',
-        laterLabelMap: result.laterLabelMap || {},
-        captionTemplateMap: result.captionTemplateMap || {},
-        hashtagGroups: result.hashtagGroups || {},
-        selectedTemplate: result.selectedTemplate || '',
-        selectedLabel: result.selectedLabel || '',
-      });
-    });
+    const captionTemplates = await CaptionTemplateAPI.getAllTemplates();
+    const laterSettings = await LaterSettingsAPI.getLaterSettings();
+    const { selectedTemplate, selectedLabel } = laterSettings;
+    this.setState({ captionTemplates, laterSettings, selectedTemplate, selectedLabel });
   }
 
-  handleSelectedTemplateChange = (e) => {
+  handleSelectedTemplateChange = async e => {
+    const { laterSettings } = this.state;
     const selectedTemplate = e.target.value;
-    chrome.storage.local.set({ selectedTemplate }, () => {
-      this.setState({ selectedTemplate });
-    });
+    laterSettings.selectedTemplate = selectedTemplate;
+    const updatedSettings = await LaterSettingsAPI.updateLaterSettings(laterSettings);
+    this.setState({ laterSettings: updatedSettings, selectedTemplate })
   }
 
-  handleSelectedLabelChange = e => {
+  handleSelectedLabelChange = async e => {
+    const { laterSettings } = this.state;
     const selectedLabel = e.target.value;
-    chrome.storage.local.set({ selectedLabel }, () => {
-      this.setState({ selectedLabel });
-    });
+    laterSettings.selectedLabel = selectedLabel;
+    const updatedSettings = await LaterSettingsAPI.updateLaterSettings(laterSettings);
+    this.setState({ laterSettings: updatedSettings, selectedLabel })
   }
   render() {
-    const { captionTemplateMap, laterLabelMap, selectedTemplate, selectedLabel } = this.state;
+    const { captionTemplates, laterSettings, selectedTemplate, selectedLabel } = this.state;
+    const captionTemplateNames = captionTemplates.map(t => t.name);
+    const labelNames = Object.keys(laterSettings.labels || {});
     return (<div style={{ width: '500px' }}>
       <div className="form-group">
         <label>Select Active Template</label>
@@ -53,7 +49,8 @@ class Popup extends React.Component {
           onChange={this.handleSelectedTemplateChange}
           value={selectedTemplate}
         >
-          {Object.keys(captionTemplateMap).map(templateName => {
+          <option value={null} selected disabled hidden>Select a Template</option>
+          {captionTemplateNames.map(templateName => {
             return <option value={templateName}>{templateName}</option>
           })}
         </select>
@@ -66,7 +63,8 @@ class Popup extends React.Component {
           onChange={this.handleSelectedLabelChange}
           value={selectedLabel}
         >
-          {Object.keys(laterLabelMap).map(labelName => {
+          <option value={null} selected disabled hidden>Select a Label</option>
+          {labelNames.map(labelName => {
             return <option value={labelName}>{labelName}</option>
           })}
         </select>
