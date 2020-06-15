@@ -1,7 +1,7 @@
 {
   "name": "React Later",
   "version": "1.0",
-  "permissions": ["activeTab", "commands", "declarativeContent", "storage", "webRequest", "webRequestBlocking", "<all_urls>"],
+  "permissions": ["declarativeContent", "storage", "webRequest", "webRequestBlocking","https://app.later.com/*"],
   "manifest_version": 2,
   "icons": {
     "16": "logo192.png",
@@ -23,8 +23,13 @@
       "js": ["/static/js/laterScheduleCalendar.js"]
     },
     {
+      "matches": ["https://app.later.com/*/media*"],
+      "css": ["/static/css/0.chunk.css"],
+      "js": ["/static/js/0.chunk.js", "/static/js/laterAddMediaNotes.js"]
+    },
+    {
       "matches": ["https://app.later.com/*/collect/import?url=*"],
-      "js": ["/static/js/0.chunk.js", "/static/js/laterContent.js"]
+      "js": ["/static/js/0.chunk.js", "/static/js/laterContent.js"],
     },
     {
       "matches": ["https://www.instagram.com/*"],

@@ -1,3 +1,6 @@
+import CaptionTemplateAPI from "../model/CaptionTemplateAPI"
+import LaterSettingsAPI from "../model/LaterSettingsAPI"
+
 /* global chrome */
 
 console.log('ext content script loaded')
@@ -39,48 +42,48 @@ waitThenDo(() => {
 }, 3000);
 
 const autoFill = async () => {
-    chrome.storage.local.get(['captionTemplateMap', 'selectedTemplate'], async ({ captionTemplateMap, selectedTemplate }) => {
-        const [ template, hashtagList ] = captionTemplateMap[selectedTemplate];
-        try {
-            await waitThenDo(() => {
-                const captionTextarea = document.querySelector('textarea.cPT--post__textarea');
-                const encodedCaption = captionTextarea.value;
-                console.log(encodedCaption);
-                const data = JSON.parse(encodedCaption);
-                let { captions, credit } = data;
+    const settings = await LaterSettingsAPI.getLaterSettings();
+    const { selectedTemplate } = settings;
+    const captionTemplate = await CaptionTemplateAPI.getTemplateByName(selectedTemplate);
+    const { hashtagList, template } = captionTemplate;
+    try {
+        await waitThenDo(() => {
+            const captionTextarea = document.querySelector('textarea.cPT--post__textarea');
+            const encodedCaption = captionTextarea.value;
+            console.log(encodedCaption);
+            const data = JSON.parse(encodedCaption);
+            let { captions, credit } = data;
 
-                credit = `@${credit.replace('@', '')}`;
-                const caption = captions[Math.floor(Math.random() * captions.length)];
-                const finalCaption = template.replace('{{customized}}', caption).replace('{{hashtags}}', '').replace('@{{credit}}', credit).replace('{{credit}}', credit);
+            credit = `@${credit.replace('@', '')}`;
+            const caption = captions[Math.floor(Math.random() * captions.length)];
+            const finalCaption = template.replace('{{customized}}', caption).replace('{{hashtags}}', '').replace('@{{credit}}', credit).replace('{{credit}}', credit);
 
-                captionTextarea.value = finalCaption;
-                captionTextarea.dispatchEvent(new Event('change', { bubbles: true }));
+            captionTextarea.value = finalCaption;
+            captionTextarea.dispatchEvent(new Event('change', { bubbles: true }));
 
-                const firstCommentButton = document.querySelector('button.qa--firstCommentCreate_btn');
-                console.log(firstCommentButton)
-                firstCommentButton.click();
-            }, 1000);
+            const firstCommentButton = document.querySelector('button.qa--firstCommentCreate_btn');
+            console.log(firstCommentButton)
+            firstCommentButton.click();
+        }, 1000);
 
-            await waitThenDo(() => {
-                let hashtags;
+        await waitThenDo(() => {
+            let hashtags;
 
-                if (!hashtagList) {
-                    hashtags = '';
-                } else {
-                    hashtags = hashtagList.sort(() => Math.random() - 0.5).slice(0, 27).join(' ');
-                }
+            if (!hashtagList) {
+                hashtags = '';
+            } else {
+                hashtags = hashtagList.sort(() => Math.random() - 0.5).slice(0, 27).join(' ');
+            }
 
-                const firstCommentTextarea = document.querySelector(`textarea[name='firstComment']`);
-                firstCommentTextarea.value = hashtags;
-                firstCommentTextarea.dispatchEvent(new Event('change', { bubbles: true }));
-            }, 1000);
-        } catch (err) {
-            console.log('ext: autoFill Error')
-            console.log(err);
-            return;
-        }
-    })
-
+            const firstCommentTextarea = document.querySelector(`textarea[name='firstComment']`);
+            firstCommentTextarea.value = hashtags;
+            firstCommentTextarea.dispatchEvent(new Event('change', { bubbles: true }));
+        }, 1000);
+    } catch (err) {
+        console.log('ext: autoFill Error')
+        console.log(err);
+        return;
+    }
 }
 
 

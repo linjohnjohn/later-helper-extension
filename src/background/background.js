@@ -14,16 +14,21 @@ chrome.runtime.onMessage.addListener(function (msg, sender, sendResponse) {
     }
 });
 
-// GRADUALLY OPEN TABS
-chrome.tabs.onRemoved.addListener(function () {
-    chrome.storage.local.get(['urls', 'isActivelyOpening'], function (data) {
-        const { urls, isActivelyOpening } = data;
-        if (!isActivelyOpening || urls === undefined || urls.length === 0) {
-            return;
+// for sending requests from iframes
+chrome.webRequest.onHeadersReceived.addListener(
+    function(info) {
+        var headers = info.responseHeaders;
+        for (var i=headers.length-1; i>=0; --i) {
+            var header = headers[i].name.toLowerCase();
+            if (header == 'x-frame-options' || header == 'frame-options') {
+                headers.splice(i, 1); // Remove header
+            }
         }
-        const nextLink = urls.pop();
-        const isDone = urls.length === 0
-        chrome.tabs.create({ url: nextLink, active: false });
-        chrome.storage.local.set({ urls: data.urls, isActivelyOpening: !isDone });
-    });
-});
+        return {responseHeaders: headers};
+    },
+    {
+        urls: [ 'https://app.later.com/*' ], // Pattern to match all http(s) pages
+        types: [ 'sub_frame' ]
+    },
+    ['blocking', 'responseHeaders']
+);

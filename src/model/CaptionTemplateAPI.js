@@ -3,6 +3,9 @@ import CaptionTemplate from './CaptionTemplate';
 
 export default class CaptionTemplateAPI {
     static async createTemplate(name) {
+        if (await this.getTemplateByName(name)) {
+            throw Error('template name already exists');
+        }
         const result = await chromeStorage.get('captionTemplates');
         const { captionTemplates = [] } = result;
         const newCT = new CaptionTemplate(name);
@@ -22,6 +25,13 @@ export default class CaptionTemplateAPI {
         const { captionTemplates = [] } = result;
         const t = captionTemplates.filter(t => t.uid === uid)[0]
         return CaptionTemplateAPI.fromObject(t);
+    }
+
+    static async getTemplateByName(name) {
+        const result = await chromeStorage.get('captionTemplates');
+        const { captionTemplates = [] } = result;
+        const t = captionTemplates.filter(t => t.name === name)[0]
+        return t ? CaptionTemplateAPI.fromObject(t): null;
     }
 
     static async updateTemplate(uid, updatedCT) {
