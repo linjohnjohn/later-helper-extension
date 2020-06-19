@@ -1,5 +1,5 @@
 {
-  "name": "React Later",
+  "name": "Later Helper",
   "version": "1.0",
   "permissions": ["declarativeContent", "storage", "webRequest", "webRequestBlocking","https://app.later.com/*"],
   "manifest_version": 2,
