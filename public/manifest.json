@@ -29,7 +29,7 @@
     },
     {
       "matches": ["https://app.later.com/*/collect/import?url=*"],
-      "js": ["/static/js/0.chunk.js", "/static/js/laterContent.js"],
+      "js": ["/static/js/0.chunk.js", "/static/js/laterContent.js"]
     },
     {
       "matches": ["https://www.instagram.com/*"],

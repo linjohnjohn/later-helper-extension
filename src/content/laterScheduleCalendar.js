@@ -46,6 +46,14 @@ const autoFill = async () => {
     const { selectedTemplate } = settings;
     const captionTemplate = await CaptionTemplateAPI.getTemplateByName(selectedTemplate);
     const { hashtagList, template } = captionTemplate;
+    let hashtags;
+
+    if (!hashtagList) {
+        hashtags = '';
+    } else {
+        hashtags = hashtagList.sort(() => Math.random() - 0.5).slice(0, 27).join(' ');
+    }
+
     try {
         await waitThenDo(() => {
             const captionTextarea = document.querySelector('textarea.cPT--post__textarea');
@@ -56,7 +64,7 @@ const autoFill = async () => {
 
             credit = `@${credit.replace('@', '')}`;
             const caption = captions[Math.floor(Math.random() * captions.length)];
-            const finalCaption = template.replace('{{customized}}', caption).replace('{{hashtags}}', '').replace('@{{credit}}', credit).replace('{{credit}}', credit);
+            const finalCaption = template.replace('{{customized}}', caption).replace('{{hashtags}}', hashtags).replace('@{{credit}}', credit).replace('{{credit}}', credit);
 
             captionTextarea.value = finalCaption;
             captionTextarea.dispatchEvent(new Event('change', { bubbles: true }));
@@ -67,14 +75,6 @@ const autoFill = async () => {
         }, 1000);
 
         await waitThenDo(() => {
-            let hashtags;
-
-            if (!hashtagList) {
-                hashtags = '';
-            } else {
-                hashtags = hashtagList.sort(() => Math.random() - 0.5).slice(0, 27).join(' ');
-            }
-
             const firstCommentTextarea = document.querySelector(`textarea[name='firstComment']`);
             firstCommentTextarea.value = hashtags;
             firstCommentTextarea.dispatchEvent(new Event('change', { bubbles: true }));
